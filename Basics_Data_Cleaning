@@ -1,0 +1,114 @@
+## Load data
+Ethnicity <- read.csv('camden/tables/KS201EW_oa11.csv')
+Rooms <- read.csv('camden/tables/KS403EW_oa11.csv')
+Qualification <- read.csv('camden/tables/KS501EW_oa11.csv')
+Employment <- read.csv('camden/tables/KS601EW_oa11.csv')
+
+
+########## Inspect data
+head(Employment)
+
+#####Selecting the economically active population
+names(Employment)
+
+##### Selecting the cols
+Ethnicity <- Ethnicity[, c(1,21)]
+Rooms <- Rooms[, c(1,13)]
+Employment <- Employment[, c(1,20)]
+Qualification <- Qualification[, c(1,21)]
+
+
+head(Employment)
+#### Renaming the column
+names(Employment)[2] <- 'Unemployed'
+
+## to change both column
+names(Ethnicity) <- c('OA', 'White_British')
+names(Rooms)<- c('OA', 'Low_Occupancy')
+names(Employment) <- c('OA', 'Unemployed')
+names(Qualification) <- c('OA', 'Qualification')
+
+####### Joining data in R #############
+
+merged_data_1<- merge(Ethnicity, Rooms, by = 'OA')
+merged_data_2 <- merge(merged_data_1, Employment, by = 'OA')
+Census_data <- merge(merged_data_2, Qualification, by = 'OA')
+
+######## Removing two merge data
+
+rm(merged_data_1, merged_data_2)
+
+## Exproting data
+write.csv(Census_data, 'Practical_data.csv', row.names = FALSE)
+
+
+#################################### New data #########################
+
+df <- read.csv('Practical_data.csv')
+print(df)
+
+
+print(df[1:20, 1:5])
+
+
+##################### EDA
+names(df)
+
+hist(df$Unemployed)
+
+boxplot(df[, 2:5])
+
+####### Visualization ##############
+install.packages('vioplot')
+library(vioplot)
+
+vioplot(df$Unemployed, df$Qualification, df$White_British, df$Low_Occupancy,
+        ylim = c(0,100),
+        col = 'dodgerblue', rectCol = 'dodgerblue3', colMed = 'dodgerblue4',
+        names = c("Unemployed", "Qualifications", "White British", "Occupancy"))
+
+###### Symbol plot
+
+symbols(df$Unemployed, df$Qualification, circles = df$White_British,
+        fg = 'white', bg = 'purple', inches = 0.2)
+
+# bubble plot
+symbols(df$Unemployed, df$Qualification,
+        circles = df$White_British,
+        fg="white", bg ="purple", inches = 0.2, xlab="% in full time employment",
+        ylab="% With a Qualification") +
+# adds a regression line, sets the colour to red
+abline(lm(df$Qualification~df$Unemployed), col="red")
+
+############### Correlation #################
+
+cor(df$Unemployed, df$Qualification)
+
+cor.test(df$Unemployed, df$Qualification)
+
+### Runs a Spearmen's correlation
+cor.test(df$Unemployed, df$Qualification, method = 'spearman')
+
+# creates a data1 object which does not include the 1st column from the original data
+data1 <- df[,2:5]
+
+cor(data1)
+
+round(cor(data1),2)
+
+########### ggplot
+library(ggplot2)
+library(reshape2)
+
+qplot(x=Var1, y=Var2, data=melt(cor(data1, use="p")), fill=value, geom="tile") +
+  scale_fill_gradient2(limits=c(-1, 1))
+############### Linear Regression
+
+model_1 <- lm(df$Qualification~df$Unemployed)
+plot(df$Unemployed, df$Qualification, xlab = '%Unemployed', ylab = '%With Qualification')+
+  abline(model_1)
+
+summary(model_1)
+
+######### R square
+predict(model_1, data.frame(Unemployed = c(15)))
