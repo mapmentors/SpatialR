@@ -1,0 +1,52 @@
+## Spatial data analysis 
+library(sf)
+
+# Load the output area shapefiles
+df =df
+output.Areas <- st_read('camden/shapefiles/Camden_oa11.shp')
+
+plot(output.Areas)
+
+##### Joining data
+OA.Census <- merge(output.Areas, df, by.x = 'OA11CD', by.y = 'OA')
+
+##Setting CRS
+st_crs(OA.Census)<- 27700
+
+
+## packages
+library(tmap)
+library(leaflet)
+
+qtm(OA.Census, fill = 'Qualification')
+
+#Createsasimplechoroplethmapofourqualificationvariable
+tm_shape(OA.Census)+tm_fill("Qualification")
+
+
+####### Color brewer
+library(RColorBrewer)
+display.brewer.all()
+
+##################### 
+# setting a colour palette
+tm_shape(OA.Census) + tm_fill("Qualification", fill.scale = tm_scale("Greens"))
+
+
+#includesahistograminthelegend
+library(tmap)
+
+tm_shape(OA.Census) + 
+  tm_fill("Qualification", 
+          fill.scale = tm_scale_intervals(
+            style = "quantile", 
+            n = 5, 
+            palette = "Reds"  # Correctly specify the color palette
+          ),
+          legend.hist = TRUE  # Include the histogram in the legend
+  ) + 
+  tm_layout(legend.na.show = FALSE)  # Hide NA values from the legend
+
+# add borders
+tm_shape(OA.Census) + tm_fill("Qualification", palette = "Reds") +
+  tm_borders(alpha=.4)
